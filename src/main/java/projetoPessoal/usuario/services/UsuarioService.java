@@ -21,6 +21,8 @@ public class UsuarioService implements IUsuarioService {
 
     @Override
     public UsuarioDto criarUsuario(UsuarioDto usuario) {
+
+        //adicionar logica caso o usuario já exista
         Usuario novoUsuario = UsuarioMapper.toEntity(usuario);
         String senhaEncoded = passwordEncoder.encode(usuario.getSenha());
         novoUsuario.setSenha(senhaEncoded);
@@ -66,10 +68,14 @@ public class UsuarioService implements IUsuarioService {
             if (passwordEncoder.matches(senha, senhaEncoded)) {
                 return new LoginResponse("Login bem-sucedido", true);
             } else {
-                return new LoginResponse("Senha incorreta", false);
+                return new LoginResponse("Dados incorretos", false);
             }
         } else {
             return new LoginResponse("Usuário não encontrado", false);
         }
     }
+
+
+
+
 }

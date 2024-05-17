@@ -13,4 +13,5 @@ public interface IUsuarioService {
     UsuarioDto atualizarUsuario(int id, UsuarioDto usuario);
     void deletarUsuario(int id);
     LoginResponse loginUsuario(LoginDto loginDTO);
+
 }

@@ -56,11 +56,13 @@ public class UsuarioController {
 
     // login
     @PostMapping(path = "/login")
-    public ResponseEntity<?> loginUsuario(@RequestBody LoginDto loginDTO)
-    {
+    public ResponseEntity<?> loginUsuario(@RequestBody LoginDto loginDTO) {
         LoginResponse loginResponse = servico.loginUsuario(loginDTO);
-        return ResponseEntity.ok(loginResponse);
+        if (loginResponse.getStatus()) {
+            return ResponseEntity.ok(loginResponse);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(loginResponse);
+        }
     }
-
 
 }

@@ -17,9 +17,13 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "username", nullable = false, unique = true, length = 255) // Definindo como único e com tamanho máximo
+    @Column(name = "username", nullable = false, unique = true, length = 255)
     private String username;
 
     @Column(name = "senha", length = 100)
     private String senha;
+
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    private Role role;
 }
