@@ -10,7 +10,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
@@ -20,34 +19,25 @@ import org.springframework.security.web.util.matcher.OrRequestMatcher;
 
 import java.util.List;
 
-import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
-
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
     @Bean
     public InMemoryUserDetailsManager userDetailsService() {
-        UserDetails user = User.withDefaultPasswordEncoder()
-                .username("Usuario")
-                .password("Usuario@123.")
-                .roles("USER")
-                .build();
-        UserDetails loja = User.withDefaultPasswordEncoder()
-                .username("Usuario")
-                .password("Usuario@123.")
+        UserDetails loja = User.withUsername("Loja")
+                .password(passwordEncoder().encode("Loja@123."))
                 .roles("LOJA")
                 .build();
-        UserDetails fornecedor = User.withDefaultPasswordEncoder()
-                .username("Usuario")
-                .password("Usuario@123.")
+        UserDetails fornecedor = User.withUsername("Fornecedor")
+                .password(passwordEncoder().encode("Fornecedor@123."))
                 .roles("FORNECEDOR")
                 .build();
-        UserDetails admin = User.withDefaultPasswordEncoder()
-                .username("Admin")
-                .password("Admin@1.")
+        UserDetails admin = User.withUsername("admin")
+                .password(passwordEncoder().encode("Admin@123."))
                 .roles("ADMIN")
                 .build();
-        return new InMemoryUserDetailsManager(user, admin);
+        return new InMemoryUserDetailsManager(loja, fornecedor, admin);
     }
 
     @Bean
@@ -55,17 +45,27 @@ public class SecurityConfig {
         httpSecurity
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(r -> r
+                .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(new OrRequestMatcher(List.of(
                                 new AntPathRequestMatcher("/swagger-ui"),
                                 new AntPathRequestMatcher("/swagger-ui/**"),
                                 new AntPathRequestMatcher("/v3/api-docs/**"),
                                 new AntPathRequestMatcher("/h2-console/**")
                         ))).permitAll()
-                        .requestMatchers(antMatcher(HttpMethod.GET)).hasAnyRole("USER")
-                        .requestMatchers(antMatcher(HttpMethod.POST)).hasAnyRole("USER")
-                        .requestMatchers(antMatcher(HttpMethod.PUT)).hasAnyRole("USER")
-                        .requestMatchers(antMatcher(HttpMethod.DELETE)).hasAnyRole("ADMIN")
+                        //loja
+                        .requestMatchers(HttpMethod.POST, "/usuario/**").hasRole("LOJA") // cadastro de loja
+                        .requestMatchers(HttpMethod.POST, "/produtos/**").hasRole("LOJA") // pede produto
+                        .requestMatchers(HttpMethod.PUT, "/usuario/**").hasRole("LOJA") // atualiza as próprias informações
+
+                        //admin
+                        .requestMatchers(HttpMethod.POST, "/cadastro/fornecedor").hasRole("ADMIN") // deleta fornecedores
+                        .requestMatchers(HttpMethod.PUT, "/fornecedor/**").hasRole("ADMIN") // atualiza dados do fornecedor
+                        .requestMatchers(HttpMethod.GET, "/fornecedor/**").hasRole("ADMIN") // cadastra novos fornecedores
+                        .requestMatchers(HttpMethod.DELETE, "/loja/**").hasRole("ADMIN") // deleta lojas
+
+
+                        .requestMatchers(HttpMethod.POST, "/login/admin").hasRole("ADMIN") //login de adm
+
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())
@@ -78,5 +78,4 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
-
 }
